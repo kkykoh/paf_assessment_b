@@ -3,11 +3,14 @@ package vttp.batch5.paf.movies.repositories;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import com.mongodb.client.result.InsertManyResult;
 
 import java.io.*;
 
 import org.bson.Document;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -66,6 +69,21 @@ public class MongoMovieRepository {
     //         System.err.println("Error inserting batch of movies into MongoDB: " + e.getMessage());
     //     }
     // }
+
+
+    public void insertMovies(List<JSONObject> movies) {
+        List<Document> documents = movies.stream()
+                .map(movie -> Document.parse(movie.toString()))
+                .collect(Collectors.toList());
+
+        if (!documents.isEmpty()) {
+            mongoTemplate.insert(documents, "imdb");
+            System.out.println("Inserted " + documents.size() + " movies into MongoDB.");
+        } else {
+            System.out.println("No movies to insert.");
+        }
+    }
+
  
 // TODO: Task 2.4
         // You can add any number of parameters and return any type from the method

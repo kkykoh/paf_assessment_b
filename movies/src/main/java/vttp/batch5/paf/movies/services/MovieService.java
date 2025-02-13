@@ -93,7 +93,9 @@ public class MovieService {
                   movie.optInt("runtime", 0)
           );
       }
-    
+      public void saveMovies(List<JSONObject> movies) {
+        mongoMovieRepository.insertMovies(movies);
+      }
 
 
   // TODO: Task 3

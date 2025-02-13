@@ -40,6 +40,7 @@ public class Dataloader implements CommandLineRunner {
         
         System.out.println("filtering movies -> start...");
         //List<MySQLmodel> filteredMoviesforSQL = filterMoviesFromZipForSQL(zipFilePath, jsonFileName);
+        List<JSONObject> filteredMovies = filterMoviesFromZipToList(zipFilePath, jsonFileName);
         filterMoviesFromZip(zipFilePath, jsonFileName);
         System.out.println(" filtering movies -> end ....");
     }
@@ -128,6 +129,41 @@ public class Dataloader implements CommandLineRunner {
 
     return cleanedMovieData;
     }
+
+    public List<JSONObject> filterMoviesFromZipToList(String zipFilePath, String jsonFileName) {
+        List<JSONObject> filteredMovies = new ArrayList<>();
+        
+        try (ZipFile zipFile = new ZipFile(zipFilePath)) {
+            ZipEntry jsonFileEntry = zipFile.getEntry(jsonFileName);
+            if (jsonFileEntry == null) {
+                System.err.println("error: json file not found in the zip.");
+                return filteredMovies;
+            }
+
+            try (InputStream inputStream = zipFile.getInputStream(jsonFileEntry);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    try {
+                        JSONObject movie = new JSONObject(line.trim());
+                        String releaseDate = movie.optString("release_date", "");
+                        if (!releaseDate.isEmpty() && extractYearFromDate(releaseDate) >= 2018) {
+                            filteredMovies.add(movie);
+                        }
+                    } catch (JSONException e) {
+                        System.err.println("skip bad json: " + line);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("error in processing zip file: " + e.getMessage());
+        }
+
+        return filteredMovies;
+    }
+
+   
 
 
     // public List<MySQLmodel> filterMoviesFromZipForSQL(String zipFilePath, String jsonFileName) {
